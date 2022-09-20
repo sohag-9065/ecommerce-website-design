@@ -1,5 +1,7 @@
 let dataSet;
-fetch("../data.json")
+let cart = [];
+
+fetch("https://raw.githubusercontent.com/prosany/Grand-Session/main/data.json")
   .then((res) => res.json())
   .then((data) => {
     dataSet = data;
@@ -11,6 +13,7 @@ const phoneDatas = async () => {
   const data = await res.json();
   displayData(data);
 };
+
 phoneDatas();
 
 function displayData(data) {
@@ -27,6 +30,7 @@ function displayData(data) {
         class="rounded-lg w-full h-[300px]"
       />
     </figure>
+
     <div class="mt-[20px]">
       <div class="flex justify-between">
         <h2 class="card-title">${name}</h2>
@@ -49,6 +53,7 @@ function displayData(data) {
         >
           <i class="fa-solid fa-circle-info mr-2"></i> See Details
         </label>
+
         <button
         onclick="handleBuyNow('${id}')"
           class="btn btn-outline btn-secondary w-[45%] mx-auto block"
@@ -99,13 +104,19 @@ function handleModal(id) {
 let count = 0;
 let newPrice = 0;
 let tax = 0;
+
 function handleBuyNow(id) {
   // count++
   count = count + 1; //1 //2
   const product = dataSet.find((item) => item.id === id);
-  const { name, price, img } = product;
-  newPrice = newPrice + product.price;
+  const { id: productId, name, price, img } = product;
+  cart.push(product);
+  newPrice = newPrice + price;
   tax = newPrice * 0.1;
+
+  const localData = getLocalStorage("cart");
+  setLocalStorage("cart", [...localData, product]);
+
   const cartContainer = document.getElementById("cart-items-container");
   const div = document.createElement("div");
   div.classList.add(
@@ -118,6 +129,7 @@ function handleBuyNow(id) {
     "cart-item-style"
   );
   div.innerHTML = `
+
   <img
     src="${img}"
     class="w-[15%]"
@@ -131,7 +143,7 @@ function handleBuyNow(id) {
       value="1"
       readonly
     />
-    <span
+    <span onclick="handleRemove('${productId}')"
       ><i
         class="fa-sharp fa-solid fa-trash text-red-700 cursor-pointer text-xl"
       ></i
@@ -140,10 +152,19 @@ function handleBuyNow(id) {
   
   `;
   cartContainer.appendChild(div);
+  document.getElementById("badge-count").innerText = "";
   document.getElementById("badge-count").innerText = count;
+
+  document.getElementById("product-count").innerText = "";
   document.getElementById("product-count").innerText = count;
+
+  document.getElementById("price").innerText = "";
   document.getElementById("price").innerText = newPrice.toFixed(2);
+
+  document.getElementById("tax-count").innerText = "";
   document.getElementById("tax-count").innerText = tax.toFixed(2);
+
+  document.getElementById("total-price").innerText = "";
   document.getElementById("total-price").innerText = (newPrice + tax).toFixed(
     2
   );
@@ -151,4 +172,146 @@ function handleBuyNow(id) {
 
 function handleClear() {
   document.getElementById("cart-items-container").innerHTML = "";
+  document.getElementById("badge-count").innerText = 0;
+  count = 0;
+  cart = [];
+  setLocalStorage("cart", cart);
 }
+
+// Remove One
+function handleRemove(id) {
+  const cartContainer = document.getElementById("cart-items-container");
+  cartContainer.innerHTML = "";
+  count = count - 1;
+  const product = cart.filter((item) => item.id !== id);
+  cart = product;
+  setLocalStorage("cart", product);
+
+  product.forEach((data) => {
+    const { id, name, price, img } = data;
+    newPrice = newPrice - price;
+    tex = newPrice * 0.1;
+
+    const div = document.createElement("div");
+    div.classList.add(
+      "flex",
+      "justify-between",
+      "items-center",
+      "p-2",
+      "rounded-md",
+      "mb-4",
+      "cart-item-style"
+    );
+    div.innerHTML = `
+
+  <img
+    src="${img}"
+    class="w-[15%]"
+    alt=""
+  />
+  <div class="flex items-center justify-between w-[80%]">
+    <h1 class="font-semibold">${name}</h1>
+    <input
+      type="text"
+      class="border-2 border-green-800 w-10 text-center rounded-md"
+      value="1"
+      readonly
+    />
+    <span onclick="handleRemove('${id}')"
+      ><i
+        class="fa-sharp fa-solid fa-trash text-red-700 cursor-pointer text-xl"
+      ></i
+    ></span>
+
+</div>
+  
+  `;
+    cartContainer.appendChild(div);
+  });
+
+  document.getElementById("badge-count").innerText = "";
+  document.getElementById("badge-count").innerText = count;
+
+  document.getElementById("product-count").innerText = "";
+  document.getElementById("product-count").innerText = count;
+
+  document.getElementById("price").innerText = "";
+  document.getElementById("price").innerText = newPrice.toFixed(2);
+
+  document.getElementById("tax-count").innerText = "";
+  document.getElementById("tax-count").innerText = tax.toFixed(2);
+
+  document.getElementById("total-price").innerText = "";
+  document.getElementById("total-price").innerText = (newPrice + tax).toFixed(
+    2
+  );
+}
+
+async function displayPreviosCart() {
+  const localData = await getLocalStorage("cart");
+  const cartContainer = document.getElementById("cart-items-container");
+  cartContainer.innerHTML = "";
+  count = localData.length || 0;
+  cart = localData;
+
+  localData.forEach((data) => {
+    const { id, name, price, img } = data;
+    newPrice = newPrice + price;
+    tex = newPrice * 0.1;
+
+    const div = document.createElement("div");
+    div.classList.add(
+      "flex",
+      "justify-between",
+      "items-center",
+      "p-2",
+      "rounded-md",
+      "mb-4",
+      "cart-item-style"
+    );
+    div.innerHTML = `
+
+  <img
+    src="${img}"
+    class="w-[15%]"
+    alt=""
+  />
+  <div class="flex items-center justify-between w-[80%]">
+    <h1 class="font-semibold">${name}</h1>
+    <input
+      type="text"
+      class="border-2 border-green-800 w-10 text-center rounded-md"
+      value="1"
+      readonly
+    />
+    <span onclick="handleRemove('${id}')"
+      ><i
+        class="fa-sharp fa-solid fa-trash text-red-700 cursor-pointer text-xl"
+      ></i
+    ></span>
+
+</div>
+  
+  `;
+    cartContainer.appendChild(div);
+  });
+
+  document.getElementById("badge-count").innerText = "";
+  document.getElementById("badge-count").innerText = count;
+
+  document.getElementById("product-count").innerText = "";
+  document.getElementById("product-count").innerText = count;
+
+  document.getElementById("price").innerText = "";
+  document.getElementById("price").innerText = newPrice.toFixed(2);
+
+  document.getElementById("tax-count").innerText = "";
+  document.getElementById("tax-count").innerText = tax.toFixed(2);
+
+  document.getElementById("total-price").innerText = "";
+  document.getElementById("total-price").innerText = (newPrice + tax).toFixed(
+    2
+  );
+}
+
+displayPreviosCart();
